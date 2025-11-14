@@ -46,6 +46,7 @@
         .nav-links a.active {
             color: #667eea;
             border-bottom: 2px solid #667eea;
+            padding-bottom: 0.25rem;
         }
         .page {
             padding: 3rem;
@@ -64,6 +65,64 @@
             margin-bottom: 2rem;
             font-size: 2.5rem;
         }
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            border: none;
+            margin-top: 2rem;
+        }
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        #react-root {
+            min-height: 50vh;
+        }
+        .info-box {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+            text-align: left;
+        }
+        .info-box h3 {
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        .info-box ul {
+            list-style: none;
+            padding: 0;
+        }
+        .info-box li {
+            padding: 0.5rem 0;
+            color: #555;
+        }
+        .info-box li:before {
+            content: "✓ ";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+        @media (max-width: 768px) {
+            nav {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            .page {
+                padding: 1.5rem;
+            }
+            .simulator-container h2 {
+                font-size: 2rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -77,10 +136,53 @@
     </nav>
     <div class="page">
         <div class="simulator-container">
-            <h2>Interactive Simulator</h2>
-            <p style="color: #666; font-size: 1.2rem; margin-bottom: 2rem;">The simulator will be implemented here with interactive trolley problem scenarios.</p>
-            <p style="color: #999;">Coming soon: Face probabilistic variations of the trolley problem with adaptive learning!</p>
+            <h2>Adaptive Trolley Problem Simulator</h2>
+            <p style="color: #666; font-size: 1.2rem; margin-bottom: 2rem;">
+                Experience AI-powered moral dilemmas that adapt to YOUR choices and challenge your ethical framework.
+            </p>
+            
+            <div class="info-box">
+                <h3>How It Works:</h3>
+                <ul>
+                    <li>Upload the trolley.csv dataset (5000+ real responses)</li>
+                    <li>Each scenario adapts based on your previous choices</li>
+                    <li>If you prefer saving younger people, the next question removes age as a factor</li>
+                    <li>Compare your moral patterns with thousands of real participants</li>
+                    <li>No API key needed - runs completely in your browser</li>
+                </ul>
+            </div>
+
+            <!-- React component will mount here -->
+            <div id="react-root"></div>
+
+            <p style="color: #999; margin-top: 2rem; font-size: 0.9rem;">
+                Note: Make sure you have the trolley.csv file ready to upload. The simulator uses advanced pattern recognition to create progressively challenging scenarios.
+            </p>
         </div>
     </div>
+
+    <!-- Instructions for React integration -->
+    <!-- 
+    To integrate the React component:
+    
+    1. Install dependencies:
+       npm install react react-dom lucide-react
+    
+    2. Create src/components/AdaptiveTrolleySimulator.jsx (already provided above)
+    
+    3. Create src/components/AdaptiveTrolleySimulator.css (already provided above)
+    
+    4. Add this script to load React component:
+       <script type="module">
+         import React from 'react';
+         import ReactDOM from 'react-dom/client';
+         import AdaptiveTrolleySimulator from './src/components/AdaptiveTrolleySimulator.jsx';
+         
+         const root = ReactDOM.createRoot(document.getElementById('react-root'));
+         root.render(<AdaptiveTrolleySimulator />);
+       </script>
+    
+    5. Or use a build tool like Vite to bundle your React app
+    -->
 </body>
 </html>
