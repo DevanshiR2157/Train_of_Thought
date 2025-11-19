@@ -227,7 +227,7 @@
           };
 
           const compareAge = (age1, age2) => {
-            const ageOrder = ['child', 'young adult', 'adult', 'middle-aged', 'elderly'];
+            const ageOrder = ['child', 'young', 'adult', 'middle', 'elderly'];
             const idx1 = ageOrder.findIndex(a => age1.toLowerCase().includes(a));
             const idx2 = ageOrder.findIndex(a => age2.toLowerCase().includes(a));
             if (idx1 < idx2) return 'younger';
@@ -249,27 +249,76 @@
             return 3;
           };
 
+          // Logical status assignment based on age
+          const getRealisticStatus = (age) => {
+            if (age === 'child') {
+              return ['student', 'child'][Math.floor(Math.random() * 2)];
+            } else if (age === 'young adult') {
+              return ['student', 'intern', 'worker', 'employee'][Math.floor(Math.random() * 4)];
+            } else if (age === 'adult') {
+              return ['doctor', 'teacher', 'engineer', 'worker', 'employee', 'unemployed'][Math.floor(Math.random() * 6)];
+            } else if (age === 'elderly') {
+              return ['retired doctor', 'retired teacher', 'elderly person', 'homeless'][Math.floor(Math.random() * 4)];
+            }
+            return 'person';
+          };
+
+          // Generate person description
+          const generatePersonDescription = (count, age, gender, fitness, status) => {
+            const parts = [];
+            
+            // Count
+            if (count > 1) {
+              parts.push(count.toString());
+            } else {
+              parts.push('1');
+            }
+
+            // Age descriptor
+            parts.push(age);
+
+            // Fitness (only if relevant and not child)
+            if (age !== 'child' && fitness !== 'average' && Math.random() > 0.5) {
+              parts.push(fitness);
+            }
+
+            // Gender
+            parts.push(gender === 'male' ? (count > 1 ? 'men' : 'man') : (count > 1 ? 'women' : 'woman'));
+
+            // Status (if meaningful)
+            if (status !== 'person' && status !== 'employee') {
+              if (count > 1) {
+                // Pluralize status
+                if (status.endsWith('ss')) {
+                  parts.push(`(${status} people)`);
+                } else {
+                  parts.push(`(${status}s)`);
+                }
+              } else {
+                parts.push(`(${status})`);
+              }
+            }
+
+            return parts.join(' ');
+          };
+
           // Intelligent Scenario Generator
           const generateIntelligentScenario = (dataset, choices) => {
             const patterns = analyzeUserPatterns(choices);
             
-            // Determine what dimension to focus on based on user's patterns
-            let focusDimension = 'age'; // default
+            let focusDimension = 'age';
             let insight = '';
 
             if (choices.length === 0) {
-              // First scenario: simple age difference
               insight = 'Starting with a basic moral dilemma to understand your baseline preferences.';
+              focusDimension = 'age';
             } else if (choices.length === 1) {
-              // Second scenario: introduce gender
-              focusDimension = 'gender';
               insight = 'Adding gender as a new factor to see how it influences your decisions.';
+              focusDimension = 'gender';
             } else if (choices.length === 2) {
-              // Third scenario: introduce fitness
-              focusDimension = 'fitness';
               insight = 'Testing how physical characteristics affect your moral judgments.';
+              focusDimension = 'fitness';
             } else {
-              // Analyze strongest bias and challenge it
               const biasStrengths = [];
               
               if (patterns.age.younger > patterns.age.older) {
@@ -307,79 +356,87 @@
                 focusDimension = biasStrengths[0].type;
                 insight = `You've shown a ${Math.round(biasStrengths[0].strength * 100)}% preference for ${biasStrengths[0].preference} people. This scenario challenges that bias.`;
               } else {
-                focusDimension = ['age', 'gender', 'fitness', 'status'][Math.floor(Math.random() * 4)];
+                focusDimension = ['age', 'gender', 'fitness', 'status', 'quantity'][Math.floor(Math.random() * 5)];
                 insight = 'Your choices are balanced. Testing a complex multi-factor scenario.';
               }
             }
 
-            const scenario = createScenarioByDimension(focusDimension, patterns, choices.length);
+            const scenario = createRealisticScenario(focusDimension, patterns, choices.length);
             
             setCurrentScenario(scenario);
             setAiInsight(insight);
             setScenarioCount(choices.length + 1);
           };
 
-          const createScenarioByDimension = (dimension, patterns, choiceCount) => {
+          const createRealisticScenario = (dimension, patterns, choiceCount) => {
             const ages = ['child', 'young adult', 'adult', 'elderly'];
             const genders = ['male', 'female'];
             const fitnesses = ['athletic', 'average', 'overweight'];
-            const statuses = ['doctor', 'teacher', 'worker', 'unemployed', 'homeless'];
 
             let groupA, groupB;
 
             if (dimension === 'age') {
-              // Challenge age preference
-              const youngerAge = ages[Math.floor(Math.random() * 2)];
-              const olderAge = ages[2 + Math.floor(Math.random() * 2)];
+              const youngerAge = ages[Math.floor(Math.random() * 2)]; // child or young adult
+              const olderAge = ages[2 + Math.floor(Math.random() * 2)]; // adult or elderly
+              const gender = genders[Math.floor(Math.random() * 2)];
+              
+              const statusA = getRealisticStatus(youngerAge);
+              const statusB = getRealisticStatus(olderAge);
+              
+              const countA = Math.floor(Math.random() * 2) + 1;
+              const countB = Math.floor(Math.random() * 2) + 1;
               
               groupA = {
-                count: Math.floor(Math.random() * 2) + 1,
+                count: countA,
                 age: youngerAge,
-                gender: genders[Math.floor(Math.random() * 2)],
+                gender: gender,
                 fitness: fitnesses[Math.floor(Math.random() * 3)],
-                status: statuses[Math.floor(Math.random() * 5)],
-                description: `${Math.floor(Math.random() * 2) + 1} ${youngerAge} ${genders[Math.floor(Math.random() * 2)]} ${statuses[Math.floor(Math.random() * 5)]}`
+                status: statusA,
+                description: generatePersonDescription(countA, youngerAge, gender, fitnesses[Math.floor(Math.random() * 3)], statusA)
               };
               
               groupB = {
-                count: Math.floor(Math.random() * 2) + 2,
+                count: countB,
                 age: olderAge,
-                gender: genders[Math.floor(Math.random() * 2)],
+                gender: gender,
                 fitness: fitnesses[Math.floor(Math.random() * 3)],
-                status: statuses[Math.floor(Math.random() * 5)],
-                description: `${Math.floor(Math.random() * 2) + 2} ${olderAge} ${genders[Math.floor(Math.random() * 2)]} ${statuses[Math.floor(Math.random() * 5)]}`
+                status: statusB,
+                description: generatePersonDescription(countB, olderAge, gender, fitnesses[Math.floor(Math.random() * 3)], statusB)
               };
             } else if (dimension === 'gender') {
-              const age = ages[Math.floor(Math.random() * 4)];
+              const age = ages[1 + Math.floor(Math.random() * 2)]; // young adult or adult
+              const statusA = getRealisticStatus(age);
+              const statusB = getRealisticStatus(age);
               
               groupA = {
-                count: Math.floor(Math.random() * 2) + 1,
+                count: 1,
                 age: age,
                 gender: 'male',
-                fitness: fitnesses[Math.floor(Math.random() * 3)],
-                status: statuses[Math.floor(Math.random() * 5)],
-                description: `${Math.floor(Math.random() * 2) + 1} ${age} male ${statuses[Math.floor(Math.random() * 5)]}`
+                fitness: 'average',
+                status: statusA,
+                description: generatePersonDescription(1, age, 'male', 'average', statusA)
               };
               
               groupB = {
-                count: Math.floor(Math.random() * 2) + 1,
+                count: 1,
                 age: age,
                 gender: 'female',
-                fitness: fitnesses[Math.floor(Math.random() * 3)],
-                status: statuses[Math.floor(Math.random() * 5)],
-                description: `${Math.floor(Math.random() * 2) + 1} ${age} female ${statuses[Math.floor(Math.random() * 5)]}`
+                fitness: 'average',
+                status: statusB,
+                description: generatePersonDescription(1, age, 'female', 'average', statusB)
               };
             } else if (dimension === 'fitness') {
-              const age = ages[Math.floor(Math.random() * 4)];
+              const age = ages[1 + Math.floor(Math.random() * 2)]; // young adult or adult
               const gender = genders[Math.floor(Math.random() * 2)];
+              const status = getRealisticStatus(age);
               
               groupA = {
                 count: 1,
                 age: age,
                 gender: gender,
                 fitness: 'athletic',
-                status: statuses[Math.floor(Math.random() * 5)],
-                description: `1 athletic ${age} ${gender} ${statuses[Math.floor(Math.random() * 5)]}`
+                status: status,
+                description: generatePersonDescription(1, age, gender, 'athletic', status)
               };
               
               groupB = {
@@ -387,36 +444,58 @@
                 age: age,
                 gender: gender,
                 fitness: 'overweight',
-                status: statuses[Math.floor(Math.random() * 5)],
-                description: `1 overweight ${age} ${gender} ${statuses[Math.floor(Math.random() * 5)]}`
+                status: status,
+                description: generatePersonDescription(1, age, gender, 'overweight', status)
               };
-            } else { // status
-              const age = ages[Math.floor(Math.random() * 4)];
+            } else if (dimension === 'status') {
+              const age = ages[2]; // adult
               const gender = genders[Math.floor(Math.random() * 2)];
               
               groupA = {
                 count: 1,
                 age: age,
                 gender: gender,
-                fitness: fitnesses[Math.floor(Math.random() * 3)],
+                fitness: 'average',
                 status: 'doctor',
-                description: `1 ${age} ${gender} doctor`
+                description: generatePersonDescription(1, age, gender, 'average', 'doctor')
               };
               
               groupB = {
                 count: 2,
                 age: age,
                 gender: gender,
-                fitness: fitnesses[Math.floor(Math.random() * 3)],
+                fitness: 'average',
                 status: 'homeless',
-                description: `2 ${age} ${gender} homeless people`
+                description: generatePersonDescription(2, age, gender, 'average', 'homeless')
+              };
+            } else { // quantity
+              const age = ages[1 + Math.floor(Math.random() * 2)];
+              const gender = genders[Math.floor(Math.random() * 2)];
+              const status = getRealisticStatus(age);
+              
+              groupA = {
+                count: 3,
+                age: age,
+                gender: gender,
+                fitness: 'average',
+                status: status,
+                description: generatePersonDescription(3, age, gender, 'average', status)
+              };
+              
+              groupB = {
+                count: 1,
+                age: age,
+                gender: gender,
+                fitness: 'average',
+                status: getRealisticStatus(age),
+                description: generatePersonDescription(1, age, gender, 'average', getRealisticStatus(age))
               };
             }
 
             const contexts = [
               "A runaway trolley is heading down the tracks.",
               "An out-of-control train is approaching a junction.",
-              "A vehicle has lost its brakes on a slope.",
+              "A self-driving car has brake failure and must choose its path.",
               "A dangerous situation requires immediate action."
             ];
 
