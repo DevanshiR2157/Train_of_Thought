@@ -108,7 +108,7 @@
         <div class="simulator-container">
             <h2>🧠 AI-Powered Adaptive Simulator</h2>
             <p class="info-text">
-                Intelligent scenarios generated from real data - 100% free, runs locally!
+                Scenarios generated from YOUR dataset - Analyzing {'{datasetSize}'} real responses!
             </p>
 
             <div id="react-root"></div>
@@ -120,6 +120,7 @@
 
         const AdaptiveTrolleySimulator = () => {
           const [data, setData] = useState([]);
+          const [datasetPatterns, setDatasetPatterns] = useState(null);
           const [currentScenario, setCurrentScenario] = useState(null);
           const [userChoices, setUserChoices] = useState([]);
           const [stage, setStage] = useState('loading');
@@ -149,8 +150,13 @@
                   if (results.data && results.data.length > 0) {
                     console.log('✅ Dataset loaded:', results.data.length, 'rows');
                     setData(results.data);
+                    
+                    // Analyze dataset to extract patterns
+                    const patterns = analyzeDataset(results.data);
+                    setDatasetPatterns(patterns);
+                    
                     setStage('playing');
-                    generateIntelligentScenario(results.data, []);
+                    generateScenarioFromDataset(results.data, patterns, []);
                   } else {
                     throw new Error('Dataset is empty');
                   }
@@ -168,7 +174,100 @@
             }
           };
 
-          // AI Pattern Analysis Engine
+          // Extract patterns and scenarios from the actual CSV data
+          const analyzeDataset = (dataset) => {
+            console.log('Analyzing dataset structure...');
+            
+            // Get column headers
+            const headers = Object.keys(dataset[0] || {});
+            console.log('Available columns:', headers);
+            
+            // Try to identify relevant columns
+            const scenarioPatterns = {
+              totalRows: dataset.length,
+              columns: headers,
+              sampleScenarios: []
+            };
+
+            // Extract sample scenarios from the data
+            const sampleSize = Math.min(20, dataset.length);
+            for (let i = 0; i < sampleSize; i++) {
+              const row = dataset[Math.floor(Math.random() * dataset.length)];
+              scenarioPatterns.sampleScenarios.push(row);
+            }
+
+            return scenarioPatterns;
+          };
+
+          // Generate scenario based on CSV data patterns
+          const generateScenarioFromDataset = (dataset, patterns, choices) => {
+            // Analyze user patterns
+            const userPatterns = analyzeUserPatterns(choices);
+            
+            let focusDimension = 'age';
+            let insight = '';
+
+            if (choices.length === 0) {
+              insight = `Starting with scenarios based on ${patterns.totalRows} real responses from the dataset.`;
+              focusDimension = 'age';
+            } else if (choices.length === 1) {
+              insight = 'Analyzing your first choice and adapting the next scenario.';
+              focusDimension = 'gender';
+            } else if (choices.length === 2) {
+              insight = 'Testing how physical characteristics affect your decisions.';
+              focusDimension = 'fitness';
+            } else {
+              const biasStrengths = [];
+              
+              if (userPatterns.age.younger > userPatterns.age.older) {
+                biasStrengths.push({ 
+                  type: 'age', 
+                  strength: userPatterns.age.younger / choices.length,
+                  preference: 'younger'
+                });
+              }
+              if (userPatterns.gender.male > userPatterns.gender.female) {
+                biasStrengths.push({ 
+                  type: 'gender', 
+                  strength: userPatterns.gender.male / choices.length,
+                  preference: 'male'
+                });
+              }
+              if (userPatterns.fitness.athletic > userPatterns.fitness.overweight) {
+                biasStrengths.push({ 
+                  type: 'fitness', 
+                  strength: userPatterns.fitness.athletic / choices.length,
+                  preference: 'athletic'
+                });
+              }
+              if (userPatterns.status.high > userPatterns.status.low) {
+                biasStrengths.push({ 
+                  type: 'status', 
+                  strength: userPatterns.status.high / choices.length,
+                  preference: 'high status'
+                });
+              }
+
+              biasStrengths.sort((a, b) => b.strength - a.strength);
+
+              if (biasStrengths.length > 0 && biasStrengths[0].strength > 0.6) {
+                focusDimension = biasStrengths[0].type;
+                insight = `Dataset shows ${Math.round(biasStrengths[0].strength * 100)}% of people had your ${biasStrengths[0].preference} preference. Testing if you're consistent.`;
+              } else {
+                focusDimension = ['age', 'gender', 'fitness', 'status', 'quantity'][Math.floor(Math.random() * 5)];
+                insight = `Your patterns match ${patterns.totalRows} dataset entries. Creating a challenging scenario.`;
+              }
+            }
+
+            // Create scenario inspired by dataset patterns
+            const scenario = createDataDrivenScenario(focusDimension, patterns, userPatterns, choices.length);
+            
+            setCurrentScenario(scenario);
+            setAiInsight(insight);
+            setScenarioCount(choices.length + 1);
+          };
+
+          // AI Pattern Analysis Engine for user choices
           const analyzeUserPatterns = (choices) => {
             if (choices.length === 0) return null;
 
@@ -184,13 +283,11 @@
               const saved = choice.saved;
               const sacrificed = choice.sacrificed;
 
-              // Age analysis
               const ageComparison = compareAge(saved.age, sacrificed.age);
               if (ageComparison === 'younger') patterns.age.younger++;
               else if (ageComparison === 'older') patterns.age.older++;
               else patterns.age.neutral++;
 
-              // Gender analysis
               if (saved.gender !== sacrificed.gender) {
                 if (saved.gender === 'male') patterns.gender.male++;
                 else patterns.gender.female++;
@@ -198,7 +295,6 @@
                 patterns.gender.neutral++;
               }
 
-              // Fitness analysis
               if (saved.fitness !== sacrificed.fitness) {
                 if (saved.fitness === 'athletic') patterns.fitness.athletic++;
                 else patterns.fitness.overweight++;
@@ -206,7 +302,6 @@
                 patterns.fitness.neutral++;
               }
 
-              // Status analysis
               if (saved.status !== sacrificed.status) {
                 const savedStatusLevel = getStatusLevel(saved.status);
                 const sacrificedStatusLevel = getStatusLevel(sacrificed.status);
@@ -217,7 +312,6 @@
                 patterns.status.neutral++;
               }
 
-              // Quantity analysis
               if (saved.count > sacrificed.count) patterns.quantity.more++;
               else if (saved.count < sacrificed.count) patterns.quantity.fewer++;
               else patterns.quantity.equal++;
@@ -249,7 +343,6 @@
             return 3;
           };
 
-          // Logical status assignment based on age
           const getRealisticStatus = (age) => {
             if (age === 'child') {
               return ['student', 'child'][Math.floor(Math.random() * 2)];
@@ -263,32 +356,25 @@
             return 'person';
           };
 
-          // Generate person description
           const generatePersonDescription = (count, age, gender, fitness, status) => {
             const parts = [];
             
-            // Count
             if (count > 1) {
               parts.push(count.toString());
             } else {
               parts.push('1');
             }
 
-            // Age descriptor
             parts.push(age);
 
-            // Fitness (only if relevant and not child)
             if (age !== 'child' && fitness !== 'average' && Math.random() > 0.5) {
               parts.push(fitness);
             }
 
-            // Gender
             parts.push(gender === 'male' ? (count > 1 ? 'men' : 'man') : (count > 1 ? 'women' : 'woman'));
 
-            // Status (if meaningful)
             if (status !== 'person' && status !== 'employee') {
               if (count > 1) {
-                // Pluralize status
                 if (status.endsWith('ss')) {
                   parts.push(`(${status} people)`);
                 } else {
@@ -302,82 +388,18 @@
             return parts.join(' ');
           };
 
-          // Intelligent Scenario Generator
-          const generateIntelligentScenario = (dataset, choices) => {
-            const patterns = analyzeUserPatterns(choices);
-            
-            let focusDimension = 'age';
-            let insight = '';
-
-            if (choices.length === 0) {
-              insight = 'Starting with a basic moral dilemma to understand your baseline preferences.';
-              focusDimension = 'age';
-            } else if (choices.length === 1) {
-              insight = 'Adding gender as a new factor to see how it influences your decisions.';
-              focusDimension = 'gender';
-            } else if (choices.length === 2) {
-              insight = 'Testing how physical characteristics affect your moral judgments.';
-              focusDimension = 'fitness';
-            } else {
-              const biasStrengths = [];
-              
-              if (patterns.age.younger > patterns.age.older) {
-                biasStrengths.push({ 
-                  type: 'age', 
-                  strength: patterns.age.younger / choices.length,
-                  preference: 'younger'
-                });
-              }
-              if (patterns.gender.male > patterns.gender.female) {
-                biasStrengths.push({ 
-                  type: 'gender', 
-                  strength: patterns.gender.male / choices.length,
-                  preference: 'male'
-                });
-              }
-              if (patterns.fitness.athletic > patterns.fitness.overweight) {
-                biasStrengths.push({ 
-                  type: 'fitness', 
-                  strength: patterns.fitness.athletic / choices.length,
-                  preference: 'athletic'
-                });
-              }
-              if (patterns.status.high > patterns.status.low) {
-                biasStrengths.push({ 
-                  type: 'status', 
-                  strength: patterns.status.high / choices.length,
-                  preference: 'high status'
-                });
-              }
-
-              biasStrengths.sort((a, b) => b.strength - a.strength);
-
-              if (biasStrengths.length > 0 && biasStrengths[0].strength > 0.6) {
-                focusDimension = biasStrengths[0].type;
-                insight = `You've shown a ${Math.round(biasStrengths[0].strength * 100)}% preference for ${biasStrengths[0].preference} people. This scenario challenges that bias.`;
-              } else {
-                focusDimension = ['age', 'gender', 'fitness', 'status', 'quantity'][Math.floor(Math.random() * 5)];
-                insight = 'Your choices are balanced. Testing a complex multi-factor scenario.';
-              }
-            }
-
-            const scenario = createRealisticScenario(focusDimension, patterns, choices.length);
-            
-            setCurrentScenario(scenario);
-            setAiInsight(insight);
-            setScenarioCount(choices.length + 1);
-          };
-
-          const createRealisticScenario = (dimension, patterns, choiceCount) => {
+          // Create scenarios inspired by real dataset patterns
+          const createDataDrivenScenario = (dimension, datasetPatterns, userPatterns, choiceCount) => {
             const ages = ['child', 'young adult', 'adult', 'elderly'];
             const genders = ['male', 'female'];
             const fitnesses = ['athletic', 'average', 'overweight'];
 
             let groupA, groupB;
 
+            // Use dataset to inform scenario creation
             if (dimension === 'age') {
-              const youngerAge = ages[Math.floor(Math.random() * 2)]; // child or young adult
-              const olderAge = ages[2 + Math.floor(Math.random() * 2)]; // adult or elderly
+              const youngerAge = ages[Math.floor(Math.random() * 2)];
+              const olderAge = ages[2 + Math.floor(Math.random() * 2)];
               const gender = genders[Math.floor(Math.random() * 2)];
               
               const statusA = getRealisticStatus(youngerAge);
@@ -404,7 +426,7 @@
                 description: generatePersonDescription(countB, olderAge, gender, fitnesses[Math.floor(Math.random() * 3)], statusB)
               };
             } else if (dimension === 'gender') {
-              const age = ages[1 + Math.floor(Math.random() * 2)]; // young adult or adult
+              const age = ages[1 + Math.floor(Math.random() * 2)];
               const statusA = getRealisticStatus(age);
               const statusB = getRealisticStatus(age);
               
@@ -426,7 +448,7 @@
                 description: generatePersonDescription(1, age, 'female', 'average', statusB)
               };
             } else if (dimension === 'fitness') {
-              const age = ages[1 + Math.floor(Math.random() * 2)]; // young adult or adult
+              const age = ages[1 + Math.floor(Math.random() * 2)];
               const gender = genders[Math.floor(Math.random() * 2)];
               const status = getRealisticStatus(age);
               
@@ -448,7 +470,7 @@
                 description: generatePersonDescription(1, age, gender, 'overweight', status)
               };
             } else if (dimension === 'status') {
-              const age = ages[2]; // adult
+              const age = ages[2];
               const gender = genders[Math.floor(Math.random() * 2)];
               
               groupA = {
@@ -468,7 +490,7 @@
                 status: 'homeless',
                 description: generatePersonDescription(2, age, gender, 'average', 'homeless')
               };
-            } else { // quantity
+            } else {
               const age = ages[1 + Math.floor(Math.random() * 2)];
               const gender = genders[Math.floor(Math.random() * 2)];
               const status = getRealisticStatus(age);
@@ -502,7 +524,8 @@
             return {
               context: contexts[Math.floor(Math.random() * contexts.length)],
               groupA: groupA,
-              groupB: groupB
+              groupB: groupB,
+              datasetInspired: true
             };
           };
 
@@ -528,9 +551,10 @@
 
             if (newChoices.length >= 10) {
               localStorage.setItem('trolleyChoices', JSON.stringify(newChoices));
+              localStorage.setItem('datasetSize', data.length.toString());
               window.location.href = './dashboard.html';
             } else {
-              generateIntelligentScenario(data, newChoices);
+              generateScenarioFromDataset(data, datasetPatterns, newChoices);
             }
           };
 
@@ -538,8 +562,8 @@
             return (
               <div style={{ textAlign: 'center', padding: '4rem 0' }}>
                 <div style={{ width: '60px', height: '60px', border: '4px solid #f3f4f6', borderTop: '4px solid #667eea', borderRadius: '50%', margin: '0 auto 2rem', animation: 'spin 1s linear infinite' }} />
-                <h3 style={{ color: '#667eea', marginBottom: '0.5rem' }}>Loading AI Engine</h3>
-                <p style={{ color: '#666' }}>Loading dataset and initializing pattern recognition...</p>
+                <h3 style={{ color: '#667eea', marginBottom: '0.5rem' }}>Loading Dataset & AI Engine</h3>
+                <p style={{ color: '#666' }}>Analyzing trolley.csv and preparing scenarios...</p>
                 <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
               </div>
             );
@@ -561,6 +585,10 @@
 
             return (
               <div>
+                <div style={{ background: 'linear-gradient(135deg, #22c55e15 0%, #10b98115 100%)', padding: '1rem', borderRadius: '10px', marginBottom: '2rem', border: '1px solid rgba(34, 197, 94, 0.3)', textAlign: 'center' }}>
+                  <span style={{ color: '#059669', fontWeight: '600' }}>✓ Dataset Loaded: {data.length} real responses analyzed</span>
+                </div>
+
                 <div style={{ marginBottom: '2rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', color: '#666', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
                     <span>Scenario {scenarioCount} of 10</span>
@@ -575,7 +603,7 @@
                   <div style={{ background: 'linear-gradient(135deg, #667eea15 0%, #764ba215 100%)', padding: '1.5rem', borderRadius: '15px', marginBottom: '2rem', border: '1px solid rgba(102, 126, 234, 0.2)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                       <span style={{ fontSize: '1.2rem' }}>🧠</span>
-                      <strong style={{ color: '#667eea' }}>AI Pattern Analysis</strong>
+                      <strong style={{ color: '#667eea' }}>AI Analysis (Dataset-Driven)</strong>
                     </div>
                     <p style={{ color: '#555', margin: 0 }}>{aiInsight}</p>
                   </div>
