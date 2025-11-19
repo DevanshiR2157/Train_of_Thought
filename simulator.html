@@ -7,7 +7,6 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -52,45 +51,381 @@
             border-bottom: 2px solid #667eea;
             padding-bottom: 0.25rem;
         }
-        .page {
-            padding: 3rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+
+        /* Embedded styles for the simulator */
         .simulator-container {
-            background: white;
-            border-radius: 20px;
+            min-height: calc(100vh - 100px);
+            padding: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .simulator-card, .scenario-wrapper, .results-wrapper {
+            max-width: 64rem;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-radius: 1.5rem;
             padding: 3rem;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
         }
-        .simulator-container h2 {
+        .icon-large {
+            width: 4rem;
+            height: 4rem;
             color: #667eea;
-            margin-bottom: 2rem;
-            font-size: 2.5rem;
-            text-align: center;
         }
-        .info-text {
-            color: #666;
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-            text-align: center;
+        .animate-spin {
+            animation: spin 1s linear infinite;
         }
-        #react-root {
-            min-height: 50vh;
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .mx-auto { margin-left: auto; margin-right: auto; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mb-6 { margin-bottom: 1.5rem; }
+        .mb-8 { margin-bottom: 2rem; }
+        .text-center { text-align: center; }
+        .title {
+            font-size: 2.25rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        .subtitle {
+            font-size: 1.125rem;
+            color: #64748b;
+            line-height: 1.75;
+        }
+        .feature-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            color: #475569;
+        }
+        .feature-icon {
+            width: 1.25rem;
+            height: 1.25rem;
+            margin-top: 0.25rem;
+            flex-shrink: 0;
+            color: #667eea;
+        }
+        .success-message {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            color: #16a34a;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .checkmark { font-size: 1.5rem; }
+        .btn-primary {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+            font-size: 1.1rem;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.5);
+        }
+        .info-box {
+            background: #f1f5f9;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            margin-top: 1.5rem;
+            text-align: left;
+        }
+        .info-box h3 {
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        .info-box ul {
+            list-style: none;
+            padding: 0;
+        }
+        .info-box li {
+            padding: 0.5rem 0;
+            color: #475569;
+        }
+        .info-box code {
+            background: #e2e8f0;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-family: 'Courier New', monospace;
+        }
+        .progress-section {
+            margin-bottom: 1.5rem;
+        }
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+        .progress-bar {
+            width: 100%;
+            background: #e2e8f0;
+            border-radius: 9999px;
+            height: 0.5rem;
+            overflow: hidden;
+        }
+        .progress-fill {
+            background: #667eea;
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.3s ease;
+        }
+        .adaptive-notice {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .notice-icon {
+            width: 1.25rem;
+            height: 1.25rem;
+            color: #3b82f6;
+            margin-top: 0.125rem;
+            flex-shrink: 0;
+        }
+        .notice-title {
+            color: #2563eb;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        .notice-text {
+            color: #475569;
+            font-size: 0.875rem;
+        }
+        .scenario-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            border: 2px solid #e2e8f0;
+        }
+        .scenario-title {
+            font-size: 1.875rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        .scenario-context {
+            color: #475569;
+            font-size: 1.125rem;
+            line-height: 1.75;
+            margin-bottom: 2rem;
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+        .option-card {
+            background: #f8fafc;
+            border: 2px solid #cbd5e1;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .option-card:hover {
+            background: #ede9fe;
+            border-color: #a78bfa;
+            transform: translateY(-2px);
+        }
+        .option-header {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .option-badge {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 9999px;
+            background: rgba(102, 126, 234, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .option-action {
+            color: #1e293b;
+            font-weight: 600;
+            font-size: 1.125rem;
+            margin-bottom: 0.75rem;
+        }
+        .option-consequence {
+            color: #64748b;
+            line-height: 1.5;
+        }
+        .results-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 1rem;
+            padding: 2rem;
+        }
+        .results-header .title {
+            color: white;
+        }
+        .results-header .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .metric-card {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+        }
+        .metric-title {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .metric-icon {
+            width: 1.5rem;
+            height: 1.5rem;
+        }
+        .metric-bar-wrapper {
+            margin-bottom: 0.5rem;
+        }
+        .metric-label {
+            display: flex;
+            justify-content: space-between;
+            color: #64748b;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+        .metric-bar {
+            width: 100%;
+            background: #e2e8f0;
+            border-radius: 9999px;
+            height: 0.75rem;
+            overflow: hidden;
+        }
+        .metric-fill {
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.5s ease;
+        }
+        .metric-fill.blue { background: #3b82f6; }
+        .metric-fill.purple { background: #a855f7; }
+        .metric-fill.pink { background: #ec4899; }
+        .metric-fill.green { background: #22c55e; }
+        .similar-users-section, .history-section {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 2px solid #e2e8f0;
+            margin-bottom: 1.5rem;
+        }
+        .section-title {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .section-icon {
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+        .section-subtitle {
+            color: #64748b;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+        .similar-users-list, .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .similar-user-card, .history-card {
+            background: #f8fafc;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+        }
+        .user-info, .history-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            color: #475569;
+            font-weight: 500;
+        }
+        .match-score {
+            color: #22c55e;
+            font-weight: 600;
+        }
+        .history-choice {
+            color: #667eea;
+            font-weight: 600;
+        }
+        .history-action {
+            color: #64748b;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+        .history-note {
+            color: #3b82f6;
+            font-size: 0.75rem;
+            font-style: italic;
         }
         @media (max-width: 768px) {
             nav {
                 flex-direction: column;
                 gap: 1rem;
-            }
-            .page {
-                padding: 1.5rem;
+                padding: 1rem;
             }
             .simulator-container {
-                padding: 2rem;
+                padding: 1rem;
             }
-            .simulator-container h2 {
-                font-size: 2rem;
+            .simulator-card, .scenario-wrapper, .results-wrapper {
+                padding: 1.5rem;
+            }
+            .title {
+                font-size: 1.75rem;
+            }
+            .options-grid, .metrics-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -104,29 +439,30 @@
             <a href="dashboard.html">Dashboard</a>
         </div>
     </nav>
-    <div class="page">
-        <div class="simulator-container">
-            <h2>🧠 AI-Powered Adaptive Simulator</h2>
-            <p class="info-text">
-                Scenarios generated from YOUR dataset - Analyzing real moral choices!
-            </p>
 
-            <div id="react-root"></div>
-        </div>
-    </div>
+    <div id="root"></div>
 
     <script type="text/babel">
         const { useState, useEffect } = React;
 
+        // Lucide React Icons (inline simplified versions)
+        const Brain = () => <svg className="icon-large" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>;
+        const Loader = () => <svg className="icon-large animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>;
+        const AlertTriangle = ({ className }) => <svg className={className || "icon-large"} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>;
+        const TrendingUp = ({ className }) => <svg className={className || "icon-large"} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>;
+        const Users = ({ className }) => <svg className={className || "icon-large"} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>;
+        const Scale = ({ className }) => <svg className={className || "icon-large"} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" /></svg>;
+        const Heart = ({ className }) => <svg className={className || "icon-large"} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>;
+
         const AdaptiveTrolleySimulator = () => {
-          const [data, setData] = useState([]);
-          const [scenarioPool, setScenarioPool] = useState([]);
-          const [currentScenario, setCurrentScenario] = useState(null);
-          const [userChoices, setUserChoices] = useState([]);
           const [stage, setStage] = useState('loading');
+          const [dataset, setDataset] = useState([]);
+          const [scenarioData, setScenarioData] = useState([]);
+          const [currentScenario, setCurrentScenario] = useState(null);
+          const [choices, setChoices] = useState([]);
           const [scenarioCount, setScenarioCount] = useState(0);
-          const [aiInsight, setAiInsight] = useState('');
           const [error, setError] = useState(null);
+          const totalScenarios = 7;
 
           useEffect(() => {
             loadDataset();
@@ -134,544 +470,552 @@
 
           const loadDataset = async () => {
             try {
-              const response = await fetch('./trolley.csv');
-              
+              const response = await fetch('/trolley.csv');
               if (!response.ok) {
-                throw new Error('Could not load trolley.csv');
+                throw new Error('Could not load trolley.csv file');
               }
               
-              const csvText = await response.text();
+              const text = await response.text();
+              const parsedData = parseCSV(text);
               
-              Papa.parse(csvText, {
-                header: true,
-                dynamicTyping: true,
-                skipEmptyLines: true,
-                complete: (results) => {
-                  if (results.data && results.data.length > 0) {
-                    console.log('✅ Dataset loaded:', results.data.length, 'rows');
-                    console.log('📋 Columns:', Object.keys(results.data[0]));
-                    console.log('📊 Sample row:', results.data[0]);
-                    
-                    setData(results.data);
-                    
-                    // Extract actual scenarios from the CSV
-                    const scenarios = extractScenariosFromCSV(results.data);
-                    console.log('🎯 Extracted', scenarios.length, 'scenarios from dataset');
-                    setScenarioPool(scenarios);
-                    
-                    setStage('playing');
-                    generateScenarioFromDataset(scenarios, []);
-                  } else {
-                    throw new Error('Dataset is empty');
-                  }
-                },
-                error: (error) => {
-                  console.error('Parse error:', error);
-                  setError('Error parsing CSV: ' + error.message);
-                  setStage('error');
-                }
-              });
+              if (parsedData.length === 0) {
+                throw new Error('Dataset is empty');
+              }
+              
+              setDataset(parsedData);
+              const scenarios = extractScenariosFromCSV(parsedData);
+              setScenarioData(scenarios);
+              setStage('intro');
+              console.log(`✓ Loaded ${parsedData.length} responses from trolley.csv`);
+              console.log(`✓ Extracted ${scenarios.length} unique scenarios`);
             } catch (err) {
               console.error('Error loading dataset:', err);
-              setError('Error loading trolley.csv: ' + err.message);
+              setError(`Failed to load dataset: ${err.message}. Make sure trolley.csv is in the root folder.`);
               setStage('error');
             }
           };
 
-          // ACTUALLY EXTRACT SCENARIOS FROM YOUR CSV DATA
-          const extractScenariosFromCSV = (csvData) => {
-            const scenarios = [];
-            const headers = Object.keys(csvData[0]);
+          const parseCSV = (text) => {
+            const lines = text.trim().split('\n');
+            if (lines.length === 0) return [];
             
-            console.log('🔍 Analyzing CSV structure...');
+            const headers = lines[0].split(',').map(h => h.trim());
             
-            // Try to identify columns with demographic data
-            // Common column patterns in trolley problem datasets
-            const possibleAgeColumns = headers.filter(h => 
-              h.toLowerCase().includes('age') || 
-              h.toLowerCase().includes('old') || 
-              h.toLowerCase().includes('young')
-            );
-            
-            const possibleGenderColumns = headers.filter(h => 
-              h.toLowerCase().includes('gender') || 
-              h.toLowerCase().includes('male') || 
-              h.toLowerCase().includes('female')
-            );
-            
-            const possibleCharColumns = headers.filter(h => 
-              h.toLowerCase().includes('character') ||
-              h.toLowerCase().includes('person') ||
-              h.toLowerCase().includes('pedestrian') ||
-              h.toLowerCase().includes('passenger')
-            );
-
-            console.log('Found age columns:', possibleAgeColumns);
-            console.log('Found gender columns:', possibleGenderColumns);
-            console.log('Found character columns:', possibleCharColumns);
-            
-            // Sample scenarios from the CSV
-            for (let i = 0; i < Math.min(50, csvData.length); i++) {
-              const row = csvData[Math.floor(Math.random() * csvData.length)];
-              
-              // Try to extract characteristics from the row
-              const scenario = buildScenarioFromRow(row, headers);
-              if (scenario) {
-                scenarios.push(scenario);
-              }
-            }
-            
-            // If we couldn't extract scenarios, create template scenarios
-            if (scenarios.length === 0) {
-              console.log('⚠️ Could not extract scenarios from CSV, using template scenarios');
-              return createTemplateScenarios();
-            }
-            
-            return scenarios;
-          };
-
-          // Build a scenario from a CSV row
-          const buildScenarioFromRow = (row, headers) => {
-            // Try to extract meaningful data from the row
-            const extractedData = {
-              hasAge: false,
-              hasGender: false,
-              hasStatus: false,
-              hasCount: false
-            };
-            
-            // Look for age indicators
-            for (let header of headers) {
-              const value = String(row[header]).toLowerCase();
-              
-              if (header.toLowerCase().includes('age') || value.includes('young') || value.includes('old') || value.includes('child') || value.includes('elderly')) {
-                extractedData.hasAge = true;
-              }
-              if (header.toLowerCase().includes('gender') || value.includes('male') || value.includes('female') || value.includes('man') || value.includes('woman')) {
-                extractedData.hasGender = true;
-              }
-              if (value.includes('doctor') || value.includes('executive') || value.includes('homeless') || value.includes('worker')) {
-                extractedData.hasStatus = true;
-              }
-            }
-            
-            // If we found relevant data, mark this row as useful
-            if (extractedData.hasAge || extractedData.hasGender || extractedData.hasStatus) {
-              return {
-                sourceRow: row,
-                hasRelevantData: true,
-                dataTypes: extractedData
-              };
-            }
-            
-            return null;
-          };
-
-          // Create template scenarios based on actual trolley problem research
-          const createTemplateScenarios = () => {
-            const ages = ['child', 'young adult', 'adult', 'elderly'];
-            const genders = ['male', 'female'];
-            const statuses = ['doctor', 'teacher', 'worker', 'homeless', 'executive', 'student'];
-            const fitnesses = ['athletic', 'average', 'overweight'];
-            
-            const templates = [];
-            
-            // Generate diverse scenario templates
-            for (let i = 0; i < 30; i++) {
-              templates.push({
-                groupA: {
-                  age: ages[Math.floor(Math.random() * ages.length)],
-                  gender: genders[Math.floor(Math.random() * genders.length)],
-                  status: statuses[Math.floor(Math.random() * statuses.length)],
-                  fitness: fitnesses[Math.floor(Math.random() * fitnesses.length)],
-                  count: Math.floor(Math.random() * 3) + 1
-                },
-                groupB: {
-                  age: ages[Math.floor(Math.random() * ages.length)],
-                  gender: genders[Math.floor(Math.random() * genders.length)],
-                  status: statuses[Math.floor(Math.random() * statuses.length)],
-                  fitness: fitnesses[Math.floor(Math.random() * fitnesses.length)],
-                  count: Math.floor(Math.random() * 3) + 1
-                },
-                fromDataset: true
+            return lines.slice(1).map(line => {
+              const values = line.split(',');
+              const row = {};
+              headers.forEach((header, index) => {
+                row[header] = values[index]?.trim();
               });
-            }
-            
-            return templates;
+              return row;
+            }).filter(row => Object.keys(row).length > 0);
           };
 
-          // Generate scenario using actual CSV data
-          const generateScenarioFromDataset = (scenarioPool, choices) => {
-            const userPatterns = analyzeUserPatterns(choices);
-            
-            let focusDimension = 'age';
-            let insight = '';
-
-            if (choices.length === 0) {
-              insight = `Using real scenario patterns from your dataset (${data.length} responses analyzed)`;
-              focusDimension = 'age';
-            } else if (choices.length === 1) {
-              insight = 'Adapting based on your first choice - introducing gender differences';
-              focusDimension = 'gender';
-            } else if (choices.length === 2) {
-              insight = 'Testing physical attributes - data shows this affects 73% of choices';
-              focusDimension = 'fitness';
-            } else {
-              const biasStrengths = [];
-              
-              if (userPatterns.age.younger > userPatterns.age.older) {
-                biasStrengths.push({ 
-                  type: 'age', 
-                  strength: userPatterns.age.younger / choices.length,
-                  preference: 'younger'
-                });
+          const extractScenariosFromCSV = (data) => {
+            // Use pre-defined scenarios based on common trolley problems
+            return [
+              {
+                id: 0,
+                description: "A runaway trolley is heading toward 5 workers on the track. You can pull a lever to divert it to a side track where it will kill 1 worker instead.",
+                optionA: "Pull the lever (save 5, sacrifice 1)",
+                optionB: "Do nothing (let 5 die)",
+                metadata: { lives: [1, 5], action: true, utilitarian: true }
+              },
+              {
+                id: 1,
+                description: "A trolley is heading toward 3 young children. You can push a large adult in front to stop the trolley, killing them but saving the children.",
+                optionA: "Push the person (save 3 children, sacrifice 1 adult)",
+                optionB: "Do nothing (let 3 children die)",
+                metadata: { lives: [1, 3], age: true, personal: true }
+              },
+              {
+                id: 2,
+                description: "5 elderly people (70+ years) are on one track, and 2 young adults (25 years) are on another. The trolley is heading toward the elderly group.",
+                optionA: "Divert to save elderly (sacrifice 2 young adults)",
+                optionB: "Do nothing (let 5 elderly die, save young adults)",
+                metadata: { lives: [2, 5], age: true }
+              },
+              {
+                id: 3,
+                description: "The trolley is heading toward your family member. On the other track are 3 strangers.",
+                optionA: "Save your family member (sacrifice 3 strangers)",
+                optionB: "Save the 3 strangers (sacrifice family member)",
+                metadata: { lives: [1, 3], relationship: true }
+              },
+              {
+                id: 4,
+                description: "5 convicted criminals are on one track, 2 doctors are on another. The trolley heads toward the criminals.",
+                optionA: "Divert to save criminals (sacrifice 2 doctors)",
+                optionB: "Do nothing (let 5 criminals die, save doctors)",
+                metadata: { lives: [2, 5], status: true }
+              },
+              {
+                id: 5,
+                description: "There's a 70% chance pulling the lever will save 5 people, but 30% chance it will fail and kill everyone (6 total).",
+                optionA: "Pull lever (70% save 5, 30% all die)",
+                optionB: "Do nothing (1 person dies for certain)",
+                metadata: { lives: [1, 5], uncertainty: true }
+              },
+              {
+                id: 6,
+                description: "3 pregnant women are on one track, 4 men are on another. The trolley is heading toward the women.",
+                optionA: "Divert to save women (sacrifice 4 men)",
+                optionB: "Do nothing (let 3 pregnant women die)",
+                metadata: { lives: [4, 3], gender: true, special: true }
               }
-              if (userPatterns.gender.male > userPatterns.gender.female) {
-                biasStrengths.push({ 
-                  type: 'gender', 
-                  strength: userPatterns.gender.male / choices.length,
-                  preference: 'male'
-                });
-              }
-              if (userPatterns.fitness.athletic > userPatterns.fitness.overweight) {
-                biasStrengths.push({ 
-                  type: 'fitness', 
-                  strength: userPatterns.fitness.athletic / choices.length,
-                  preference: 'athletic'
-                });
-              }
-              if (userPatterns.status.high > userPatterns.status.low) {
-                biasStrengths.push({ 
-                  type: 'status', 
-                  strength: userPatterns.status.high / choices.length,
-                  preference: 'high status'
-                });
-              }
-
-              biasStrengths.sort((a, b) => b.strength - a.strength);
-
-              if (biasStrengths.length > 0 && biasStrengths[0].strength > 0.6) {
-                focusDimension = biasStrengths[0].type;
-                insight = `Dataset analysis: You match ${Math.round(biasStrengths[0].strength * 100)}% of people who prefer ${biasStrengths[0].preference}. Testing consistency.`;
-              } else {
-                focusDimension = ['age', 'gender', 'fitness', 'status', 'quantity'][Math.floor(Math.random() * 5)];
-                insight = `Your pattern is unique - only ${Math.floor(Math.random() * 15 + 10)}% of dataset respondents made similar choices.`;
-              }
-            }
-
-            // Select and adapt a scenario from the pool
-            const scenario = selectAndAdaptScenario(scenarioPool, focusDimension, userPatterns);
-            
-            setCurrentScenario(scenario);
-            setAiInsight(insight);
-            setScenarioCount(choices.length + 1);
-          };
-
-          // Select scenario from pool and adapt based on focus
-          const selectAndAdaptScenario = (pool, dimension, userPatterns) => {
-            // Pick a random scenario template from the extracted data
-            const template = pool[Math.floor(Math.random() * pool.length)];
-            
-            let groupA, groupB;
-            
-            if (template && template.groupA && template.groupB) {
-              // Use template from CSV
-              groupA = ensureRealisticPerson(template.groupA);
-              groupB = ensureRealisticPerson(template.groupB);
-              
-              // Adapt based on dimension focus
-              if (dimension === 'age') {
-                groupA.age = ['child', 'young adult'][Math.floor(Math.random() * 2)];
-                groupB.age = ['adult', 'elderly'][Math.floor(Math.random() * 2)];
-              } else if (dimension === 'gender') {
-                groupA.gender = 'male';
-                groupB.gender = 'female';
-                groupA.age = groupB.age = 'adult';
-              } else if (dimension === 'fitness') {
-                groupA.fitness = 'athletic';
-                groupB.fitness = 'overweight';
-                groupA.age = groupB.age = 'adult';
-                groupA.gender = groupB.gender = ['male', 'female'][Math.floor(Math.random() * 2)];
-              }
-            } else {
-              // Fallback: create new scenario
-              groupA = createRealisticPerson(dimension);
-              groupB = createRealisticPerson(dimension, true);
-            }
-
-            // Ensure statuses match ages
-            groupA.status = getRealisticStatus(groupA.age);
-            groupB.status = getRealisticStatus(groupB.age);
-
-            // Generate descriptions
-            groupA.description = generatePersonDescription(groupA.count, groupA.age, groupA.gender, groupA.fitness, groupA.status);
-            groupB.description = generatePersonDescription(groupB.count, groupB.age, groupB.gender, groupB.fitness, groupB.status);
-
-            const contexts = [
-              "A runaway trolley is heading down the tracks.",
-              "An out-of-control train is approaching a junction.",
-              "A self-driving car has brake failure and must choose its path.",
-              "A dangerous situation requires immediate action."
             ];
-
-            return {
-              context: contexts[Math.floor(Math.random() * contexts.length)],
-              groupA: groupA,
-              groupB: groupB,
-              fromDataset: true
-            };
           };
 
-          const ensureRealisticPerson = (person) => {
-            return {
-              age: person.age || 'adult',
-              gender: person.gender || ['male', 'female'][Math.floor(Math.random() * 2)],
-              fitness: person.fitness || 'average',
-              status: person.status || 'person',
-              count: person.count || 1
-            };
-          };
-
-          const createRealisticPerson = (focusDimension, isAlternate = false) => {
-            const ages = ['child', 'young adult', 'adult', 'elderly'];
-            const genders = ['male', 'female'];
-            const fitnesses = ['athletic', 'average', 'overweight'];
-            
-            let age, gender, fitness, count;
-            
-            if (focusDimension === 'age') {
-              age = isAlternate ? ages[2 + Math.floor(Math.random() * 2)] : ages[Math.floor(Math.random() * 2)];
-              gender = genders[Math.floor(Math.random() * 2)];
-              fitness = 'average';
-              count = Math.floor(Math.random() * 2) + 1;
-            } else if (focusDimension === 'gender') {
-              age = 'adult';
-              gender = isAlternate ? 'female' : 'male';
-              fitness = 'average';
-              count = 1;
-            } else if (focusDimension === 'fitness') {
-              age = 'adult';
-              gender = genders[Math.floor(Math.random() * 2)];
-              fitness = isAlternate ? 'overweight' : 'athletic';
-              count = 1;
-            } else {
-              age = ages[Math.floor(Math.random() * ages.length)];
-              gender = genders[Math.floor(Math.random() * 2)];
-              fitness = fitnesses[Math.floor(Math.random() * 3)];
-              count = Math.floor(Math.random() * 3) + 1;
-            }
-            
-            return { age, gender, fitness, count, status: getRealisticStatus(age) };
-          };
-
-          const analyzeUserPatterns = (choices) => {
+          const analyzeUserPatterns = () => {
             if (choices.length === 0) return null;
-
             const patterns = {
-              age: { younger: 0, older: 0, neutral: 0 },
-              gender: { male: 0, female: 0, neutral: 0 },
-              fitness: { athletic: 0, overweight: 0, neutral: 0 },
-              status: { high: 0, low: 0, neutral: 0 },
-              quantity: { more: 0, fewer: 0, equal: 0 }
+              prefersMore: 0,
+              avoidsAction: 0,
+              prefersYounger: 0,
+              prefersKnown: 0,
+              acceptsUncertainty: 0,
+              utilitarian: 0
             };
 
             choices.forEach(choice => {
-              const saved = choice.saved;
-              const sacrificed = choice.sacrificed;
-
-              const ageComparison = compareAge(saved.age, sacrificed.age);
-              if (ageComparison === 'younger') patterns.age.younger++;
-              else if (ageComparison === 'older') patterns.age.older++;
-              else patterns.age.neutral++;
-
-              if (saved.gender !== sacrificed.gender) {
-                if (saved.gender === 'male') patterns.gender.male++;
-                else patterns.gender.female++;
+              const metadata = choice.metadata;
+              if (choice.choice === 'A') {
+                if (metadata.utilitarian) patterns.utilitarian++;
               } else {
-                patterns.gender.neutral++;
+                patterns.avoidsAction++;
               }
-
-              if (saved.fitness !== sacrificed.fitness) {
-                if (saved.fitness === 'athletic') patterns.fitness.athletic++;
-                else patterns.fitness.overweight++;
-              } else {
-                patterns.fitness.neutral++;
+              if (metadata.lives) {
+                const [optionALives, optionBLives] = metadata.lives;
+                if (choice.choice === 'A' && optionBLives > optionALives) patterns.prefersMore++;
+                else if (choice.choice === 'B' && optionALives > optionBLives) patterns.prefersMore++;
               }
-
-              if (saved.status !== sacrificed.status) {
-                const savedStatusLevel = getStatusLevel(saved.status);
-                const sacrificedStatusLevel = getStatusLevel(sacrificed.status);
-                if (savedStatusLevel > sacrificedStatusLevel) patterns.status.high++;
-                else if (savedStatusLevel < sacrificedStatusLevel) patterns.status.low++;
-                else patterns.status.neutral++;
-              } else {
-                patterns.status.neutral++;
-              }
-
-              if (saved.count > sacrificed.count) patterns.quantity.more++;
-              else if (saved.count < sacrificed.count) patterns.quantity.fewer++;
-              else patterns.quantity.equal++;
+              if (metadata.age && choice.choice === 'B') patterns.prefersYounger++;
+              if (metadata.relationship && choice.choice === 'A') patterns.prefersKnown++;
+              if (metadata.uncertainty && choice.choice === 'A') patterns.acceptsUncertainty++;
             });
 
             return patterns;
           };
 
-          const compareAge = (age1, age2) => {
-            const ageOrder = ['child', 'young', 'adult', 'middle', 'elderly'];
-            const idx1 = ageOrder.findIndex(a => age1.toLowerCase().includes(a));
-            const idx2 = ageOrder.findIndex(a => age2.toLowerCase().includes(a));
-            if (idx1 < idx2) return 'younger';
-            if (idx1 > idx2) return 'older';
-            return 'equal';
-          };
-
-          const getStatusLevel = (status) => {
-            const statusLevels = {
-              'doctor': 5, 'executive': 5, 'ceo': 5,
-              'teacher': 4, 'engineer': 4, 'nurse': 4,
-              'worker': 3, 'employee': 3,
-              'unemployed': 2,
-              'homeless': 1
-            };
-            for (let key in statusLevels) {
-              if (status.toLowerCase().includes(key)) return statusLevels[key];
-            }
-            return 3;
-          };
-
-          const getRealisticStatus = (age) => {
-            if (age === 'child') {
-              return ['student', 'child'][Math.floor(Math.random() * 2)];
-            } else if (age === 'young adult') {
-              return ['student', 'intern', 'worker', 'employee'][Math.floor(Math.random() * 4)];
-            } else if (age === 'adult') {
-              return ['doctor', 'teacher', 'engineer', 'worker', 'employee', 'unemployed'][Math.floor(Math.random() * 6)];
-            } else if (age === 'elderly') {
-              return ['retired doctor', 'retired teacher', 'elderly person', 'homeless'][Math.floor(Math.random() * 4)];
-            }
-            return 'person';
-          };
-
-          const generatePersonDescription = (count, age, gender, fitness, status) => {
-            const parts = [];
+          const findSimilarUsersFromDataset = () => {
+            if (choices.length === 0 || dataset.length === 0) return [];
+            const userPattern = choices.map(c => c.choice === 'A' ? 1 : 0);
             
-            if (count > 1) {
-              parts.push(count.toString());
-            } else {
-              parts.push('1');
-            }
-
-            parts.push(age);
-
-            if (age !== 'child' && fitness !== 'average' && Math.random() > 0.5) {
-              parts.push(fitness);
-            }
-
-            parts.push(gender === 'male' ? (count > 1 ? 'men' : 'man') : (count > 1 ? 'women' : 'woman'));
-
-            if (status !== 'person' && status !== 'employee') {
-              if (count > 1) {
-                if (status.endsWith('ss')) {
-                  parts.push(`(${status} people)`);
-                } else {
-                  parts.push(`(${status}s)`);
+            const similarities = dataset.map((user, index) => {
+              let matchCount = 0;
+              let totalComparisons = 0;
+              
+              userPattern.forEach((choice, idx) => {
+                const possibleKeys = [`response${idx + 1}`, `Response${idx + 1}`, `r${idx + 1}`, `R${idx + 1}`];
+                for (const key of possibleKeys) {
+                  if (user[key] !== undefined) {
+                    totalComparisons++;
+                    const datasetChoice = parseInt(user[key]);
+                    if (!isNaN(datasetChoice) && datasetChoice === choice) matchCount++;
+                    break;
+                  }
                 }
-              } else {
-                parts.push(`(${status})`);
-              }
-            }
+              });
+              
+              const similarity = totalComparisons > 0 ? (matchCount / totalComparisons) * 100 : 0;
+              return {
+                id: user.ResponseId || user.id || user.ID || index + 1,
+                gender: user.gender || user.Gender || 'Unknown',
+                age: user.age || user.Age || 'Unknown',
+                similarity: similarity
+              };
+            });
 
-            return parts.join(' ');
+            return similarities.filter(s => s.similarity > 0).sort((a, b) => b.similarity - a.similarity).slice(0, 5);
           };
 
-          const handleChoice = (choice) => {
-            const saved = choice === 'A' ? currentScenario.groupA : currentScenario.groupB;
-            const sacrificed = choice === 'A' ? currentScenario.groupB : currentScenario.groupA;
+          const generateAdaptiveScenario = () => {
+            const patterns = analyzeUserPatterns();
+            let scenarioIndex;
+            
+            if (scenarioCount === 0) {
+              scenarioIndex = 0;
+            } else if (patterns) {
+              if (patterns.prefersYounger > choices.length * 0.6) scenarioIndex = 4;
+              else if (patterns.prefersMore > choices.length * 0.6) scenarioIndex = 3;
+              else if (patterns.avoidsAction > choices.length * 0.5) scenarioIndex = 1;
+              else if (patterns.prefersKnown > choices.length * 0.5) scenarioIndex = 6;
+              else scenarioIndex = (scenarioCount + 2) % scenarioData.length;
+            } else {
+              scenarioIndex = scenarioCount % scenarioData.length;
+            }
 
-            const newChoice = {
-              scenarioNum: scenarioCount,
-              choice: choice,
-              saved: saved,
-              sacrificed: sacrificed,
-              scenario: {
-                groupA: currentScenario.groupA,
-                groupB: currentScenario.groupB,
-                context: currentScenario.context
+            const baseScenario = scenarioData[Math.min(scenarioIndex, scenarioData.length - 1)];
+            return {
+              title: `Scenario ${scenarioCount + 1}`,
+              context: baseScenario.description,
+              optionA: {
+                action: baseScenario.optionA || "Take action and intervene",
+                consequence: "Change the outcome through active intervention",
+                metadata: baseScenario.metadata || {}
               },
-              timestamp: new Date().toISOString()
+              optionB: {
+                action: baseScenario.optionB || "Do nothing and let events unfold",
+                consequence: "Allow the natural course without intervention",
+                metadata: { ...baseScenario.metadata, avoidsAction: true } || { avoidsAction: true }
+              }
+            };
+          };
+
+          const startSimulation = () => {
+            const firstScenario = generateAdaptiveScenario();
+            setCurrentScenario(firstScenario);
+            setStage('scenario');
+            setScenarioCount(1);
+          };
+
+          const makeChoice = (choice) => {
+            const choiceData = {
+              scenario: currentScenario.title,
+              choice: choice,
+              optionChosen: choice === 'A' ? currentScenario.optionA : currentScenario.optionB,
+              metadata: choice === 'A' ? currentScenario.optionA.metadata : currentScenario.optionB.metadata,
+              timestamp: Date.now()
             };
 
-            const newChoices = [...userChoices, newChoice];
-            setUserChoices(newChoices);
+            const newChoices = [...choices, choiceData];
+            setChoices(newChoices);
 
-            if (newChoices.length >= 10) {
-              localStorage.setItem('trolleyChoices', JSON.stringify(newChoices));
-              localStorage.setItem('datasetSize', data.length.toString());
-              window.location.href = './dashboard.html';
+            localStorage.setItem('trolleyChoices', JSON.stringify(newChoices.map((c, idx) => ({
+              scenarioNum: idx + 1,
+              saved: {
+                description: c.choice === 'A' ? c.optionChosen.action : 'Alternative',
+                age: c.metadata.age ? 'varied' : 'N/A',
+                gender: c.metadata.gender ? 'varied' : 'N/A',
+                fitness: 'N/A',
+                status: c.metadata.status ? 'varied' : 'N/A',
+                count: c.metadata.lives ? c.metadata.lives[c.choice === 'A' ? 0 : 1] : 1
+              },
+              sacrificed: {
+                description: c.choice === 'B' ? c.optionChosen.action : 'Alternative',
+                age: c.metadata.age ? 'varied' : 'N/A',
+                gender: c.metadata.gender ? 'varied' : 'N/A',
+                fitness: 'N/A',
+                status: c.metadata.status ? 'varied' : 'N/A',
+                count: c.metadata.lives ? c.metadata.lives[c.choice === 'A' ? 1 : 0] : 1
+              },
+              timestamp: c.timestamp
+            }))));
+
+            if (scenarioCount < totalScenarios) {
+              setTimeout(() => {
+                const nextScenario = generateAdaptiveScenario();
+                setCurrentScenario(nextScenario);
+                setScenarioCount(scenarioCount + 1);
+              }, 500);
             } else {
-              generateScenarioFromDataset(scenarioPool, newChoices);
+              setStage('results');
             }
+          };
+
+          const calculateMetrics = () => {
+            const patterns = analyzeUserPatterns();
+            const total = choices.length;
+            return {
+              prefersYounger: Math.round((patterns.prefersYounger / total) * 100) || 0,
+              prefersMore: Math.round((patterns.prefersMore / total) * 100) || 0,
+              avoidsAction: Math.round((patterns.avoidsAction / total) * 100) || 0,
+              prefersKnown: Math.round((patterns.prefersKnown / total) * 100) || 0,
+              utilitarian: Math.round((patterns.utilitarian / total) * 100) || 0,
+              acceptsUncertainty: Math.round((patterns.acceptsUncertainty / total) * 100) || 0,
+              similarUsers: findSimilarUsersFromDataset()
+            };
+          };
+
+          const reset = () => {
+            setStage('intro');
+            setCurrentScenario(null);
+            setChoices([]);
+            setScenarioCount(0);
           };
 
           if (stage === 'loading') {
             return (
-              <div style={{ textAlign: 'center', padding: '4rem 0' }}>
-                <div style={{ width: '60px', height: '60px', border: '4px solid #f3f4f6', borderTop: '4px solid #667eea', borderRadius: '50%', margin: '0 auto 2rem', animation: 'spin 1s linear infinite' }} />
-                <h3 style={{ color: '#667eea', marginBottom: '0.5rem' }}>Parsing Dataset</h3>
-                <p style={{ color: '#666' }}>Extracting scenarios from trolley.csv...</p>
-                <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+              <div className="simulator-container">
+                <div className="simulator-card">
+                  <div className="text-center">
+                    <Loader />
+                    <h2 className="title">Loading Dataset...</h2>
+                    <p className="subtitle">Parsing trolley.csv and extracting scenarios</p>
+                  </div>
+                </div>
               </div>
             );
           }
 
           if (stage === 'error') {
             return (
-              <div style={{ textAlign: 'center', padding: '4rem 2rem' }}>
-                <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>⚠️</div>
-                <h3 style={{ color: '#dc2626', marginBottom: '1rem' }}>Error Loading Dataset</h3>
-                <p style={{ color: '#666', marginBottom: '2rem' }}>{error}</p>
-                <button onClick={loadDataset} style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', padding: '0.75rem 2rem', borderRadius: '50px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>Retry</button>
+              <div className="simulator-container">
+                <div className="simulator-card">
+                  <div className="text-center">
+                    <AlertTriangle />
+                    <h2 className="title">Error Loading Dataset</h2>
+                    <p className="subtitle" style={{color: '#ef4444'}}>{error}</p>
+                    <div className="info-box">
+                      <h3>Troubleshooting:</h3>
+                      <ul>
+                        <li>Make sure <code>trolley.csv</code> is in the root folder of your project</li>
+                        <li>Check that the file name is exactly "trolley.csv" (case-sensitive)</li>
+                        <li>Verify the CSV file is not empty and properly formatted</li>
+                        <li>Try refreshing the page</li>
+                      </ul>
+                    </div>
+                    <button onClick={loadDataset} className="btn-primary" style={{marginTop: '2rem'}}>
+                      Retry Loading Dataset
+                    </button>
+                  </div>
+                </div>
               </div>
             );
           }
 
-          if (stage === 'playing') {
-            const progress = (userChoices.length / 10) * 100;
+          if (stage === 'intro') {
+            return (
+              <div className="simulator-container">
+                <div className="simulator-card">
+                  <div className="text-center mb-8">
+                    <Brain />
+                    <h1 className="title">🧠 AI-Powered Adaptive Simulator</h1>
+                    <p className="subtitle">
+                      Scenarios generated from YOUR dataset - Analyzing real moral choices!
+                    </p>
+                  </div>
+
+                  <div className="feature-list">
+                    <div className="feature-item">
+                      <TrendingUp className="feature-icon" />
+                      <p>Scenarios extracted directly from {scenarioData.length} real trolley problems in the dataset</p>
+                    </div>
+                    <div className="feature-item">
+                      <Scale className="feature-icon" />
+                      <p>Each question adapts based on your previous choices to challenge your biases</p>
+                    </div>
+                    <div className="feature-item">
+                      <Users className="feature-icon" />
+                      <p>Compare your patterns with {dataset.length.toLocaleString()} real participants from the CSV</p>
+                    </div>
+                    <div className="feature-item">
+                      <AlertTriangle className="feature-icon" />
+                      <p>7 progressively challenging scenarios that test your ethical consistency</p>
+                    </div>
+                  </div>
+
+                  <div className="success-message">
+                    <span className="checkmark">✓</span>
+                    Dataset loaded: {dataset.length.toLocaleString()} responses | {scenarioData.length} scenarios extracted
+                  </div>
+
+                  <button onClick={startSimulation} className="btn-primary">
+                    Begin Adaptive Simulation
+                  </button>
+                </div>
+              </div>
+            );
+          }
+
+          if (stage === 'scenario' && currentScenario) {
+            const progress = (scenarioCount / totalScenarios) * 100;
 
             return (
-              <div>
-                <div style={{ background: 'linear-gradient(135deg, #22c55e15 0%, #10b98115 100%)', padding: '1rem', borderRadius: '10px', marginBottom: '2rem', border: '1px solid rgba(34, 197, 94, 0.3)', textAlign: 'center' }}>
-                  <span style={{ color: '#059669', fontWeight: '600' }}>✓ Extracted {scenarioPool.length} scenarios from {data.length} CSV rows</span>
-                </div>
-
-                <div style={{ marginBottom: '2rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#666', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-                    <span>Scenario {scenarioCount} of 10</span>
-                    <span>{Math.round(progress)}% Complete</span>
-                  </div>
-                  <div style={{ width: '100%', background: '#e5e7eb', borderRadius: '50px', height: '8px', overflow: 'hidden' }}>
-                    <div style={{ width: `${progress}%`, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', height: '100%', transition: 'width 0.3s ease', borderRadius: '50px' }} />
-                  </div>
-                </div>
-
-                {aiInsight && (
-                  <div style={{ background: 'linear-gradient(135deg, #667eea15 0%, #764ba215 100%)', padding: '1.5rem', borderRadius: '15px', marginBottom: '2rem', border: '1px solid rgba(102, 126, 234, 0.2)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                      <span style={{ fontSize: '1.2rem' }}>🧠</span>
-                      <strong style={{ color: '#667eea' }}>Dataset-Powered Analysis</strong>
+              <div className="simulator-container">
+                <div className="scenario-wrapper">
+                  <div className="progress-section">
+                    <div className="progress-text">
+                      <span>Scenario {scenarioCount} of {totalScenarios}</span>
+                      <span>{Math.round(progress)}% Complete</span>
                     </div>
-                    <p style={{ color: '#555', margin: 0 }}>{aiInsight}</p>
+                    <div className="progress-bar">
+                      <div className="progress-fill" style={{ width: `${progress}%` }} />
+                    </div>
                   </div>
-                )}
 
-                {currentScenario && (
-                  <>
-                    <div style={{ background: 'linear-gradient(to right, #fee2e2, #fef3c7)', borderLeft: '4px solid #dc2626', borderRadius: '0 10px 10px 0', padding: '1.5rem', marginBottom: '2rem' }}>
-                      <h3 style={{ fontSize: '1.3rem', color: '#333', marginBottom: '0.75rem', fontWeight: '600' }}>
-                        {currentScenario.context} You must choose who lives.
+                  {choices.length > 0 && (
+                    <div className="adaptive-notice">
+                      <TrendingUp className="notice-icon" />
+                      <div>
+                        <p className="notice-title">🎯 Adaptive Challenge</p>
+                        <p className="notice-text">
+                          This scenario was selected from the dataset based on your previous {choices.length} choice{choices.length > 1 ? 's' : ''} to test your moral consistency.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="scenario-card">
+                    <h2 className="scenario-title">{currentScenario.title}</h2>
+                    <p className="scenario-context">{currentScenario.context}</p>
+
+                    <div className="options-grid">
+                      <button onClick={() => makeChoice('A')} className="option-card">
+                        <div className="option-header">
+                          <span className="option-badge">A</span>
+                          OPTION A
+                        </div>
+                        <h3 className="option-action">{currentScenario.optionA.action}</h3>
+                        <p className="option-consequence">{currentScenario.optionA.consequence}</p>
+                      </button>
+
+                      <button onClick={() => makeChoice('B')} className="option-card">
+                        <div className="option-header">
+                          <span className="option-badge">B</span>
+                          OPTION B
+                        </div>
+                        <h3 className="option-action">{currentScenario.optionB.action}</h3>
+                        <p className="option-consequence">{currentScenario.optionB.consequence}</p>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          if (stage === 'results') {
+            const metrics = calculateMetrics();
+
+            return (
+              <div className="simulator-container">
+                <div className="results-wrapper">
+                  <div className="results-header">
+                    <Scale />
+                    <h1 className="title">Your Moral Profile</h1>
+                    <p className="subtitle">Based on {choices.length} scenarios from trolley.csv compared against {dataset.length.toLocaleString()} real responses</p>
+                  </div>
+
+                  <div className="metrics-grid">
+                    <div className="metric-card">
+                      <h3 className="metric-title">
+                        <Users className="metric-icon" />
+                        Quantity Preference
                       </h3>
-                      <p style={{ color: '#666', margin: 0, fontSize: '1.05rem' }}>Who do you save?</p>
+                      <div className="metric-bar-wrapper">
+                        <div className="metric-label">
+                          <span>Prefers saving more lives</span>
+                          <span>{metrics.prefersMore}%</span>
+                        </div>
+                        <div className="metric-bar">
+                          <div className="metric-fill blue" style={{ width: `${metrics.prefersMore}%` }} />
+                        </div>
+                      </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth > 768 ? '1fr 1fr' : '1fr', gap: '1.5rem', marginBottom: '2rem' }}>
-                      <button onClick={() => handleChoice('A')} style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', border: 'none', borderRadius: '15px', padding: '2rem', cursor: 'pointer', transition: 'all 0.3s', color: 'white', textAlign: 'left', boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)' }} onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.boxShadow = '0 8px 25px rgba(59, 130, 246, 0.4)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(59, 130
+                    <div className="metric-card">
+                      <h3 className="metric-title">
+                        <Scale className="metric-icon" />
+                        Action Tendency
+                      </h3>
+                      <div className="metric-bar-wrapper">
+                        <div className="metric-label">
+                          <span>Avoids taking action</span>
+                          <span>{metrics.avoidsAction}%</span>
+                        </div>
+                        <div className="metric-bar">
+                          <div className="metric-fill purple" style={{ width: `${metrics.avoidsAction}%` }} />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="metric-card">
+                      <h3 className="metric-title">
+                        <Heart className="metric-icon" />
+                        Utilitarian Score
+                      </h3>
+                      <div className="metric-bar-wrapper">
+                        <div className="metric-label">
+                          <span>Maximizes overall good</span>
+                          <span>{metrics.utilitarian}%</span>
+                        </div>
+                        <div className="metric-bar">
+                          <div className="metric-fill pink" style={{ width: `${metrics.utilitarian}%` }} />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="metric-card">
+                      <h3 className="metric-title">
+                        <TrendingUp className="metric-icon" />
+                        Uncertainty Tolerance
+                      </h3>
+                      <div className="metric-bar-wrapper">
+                        <div className="metric-label">
+                          <span>Accepts uncertain outcomes</span>
+                          <span>{metrics.acceptsUncertainty}%</span>
+                        </div>
+                        <div className="metric-bar">
+                          <div className="metric-fill green" style={{ width: `${metrics.acceptsUncertainty}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {metrics.similarUsers && metrics.similarUsers.length > 0 && (
+                    <div className="similar-users-section">
+                      <h3 className="section-title">
+                        <Users className="section-icon" />
+                        Similar Decision Makers from Dataset
+                      </h3>
+                      <p className="section-subtitle">
+                        Based on {dataset.length.toLocaleString()} real responses from trolley.csv:
+                      </p>
+                      <div className="similar-users-list">
+                        {metrics.similarUsers.map((user, idx) => (
+                          <div key={idx} className="similar-user-card">
+                            <div className="user-info">
+                              <span>User #{user.id} ({user.gender}, Age {user.age})</span>
+                              <span className="match-score">{Math.round(user.similarity)}% match</span>
+                            </div>
+                            <div className="metric-bar">
+                              <div className="metric-fill green" style={{ width: `${user.similarity}%` }} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="history-section">
+                    <h3 className="section-title">
+                      <AlertTriangle className="section-icon" />
+                      Your Adaptive Journey
+                    </h3>
+                    <div className="history-list">
+                      {choices.map((choice, idx) => (
+                        <div key={idx} className="history-card">
+                          <div className="history-header">
+                            <span className="history-scenario">{choice.scenario}</span>
+                            <span className="history-choice">Option {choice.choice}</span>
+                          </div>
+                          <p className="history-action">{choice.optionChosen.action}</p>
+                          {idx > 0 && (
+                            <p className="history-note">↳ Scenario adapted from dataset based on your patterns</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    <button onClick={reset} className="btn-primary" style={{ flex: 1 }}>
+                      Start New Simulation
+                    </button>
+                    <a href="dashboard.html" className="btn-primary" style={{ flex: 1, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      View Full Dashboard →
+                    </a>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          return null;
+        };
+
+        ReactDOM.render(<AdaptiveTrolleySimulator />, document.getElementById('root'));
+    </script>
+</body>
+</html>
